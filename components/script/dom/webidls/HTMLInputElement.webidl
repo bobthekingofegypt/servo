@@ -27,7 +27,7 @@ interface HTMLInputElement : HTMLElement {
           [SetterThrows]
           attribute long maxLength;
            attribute DOMString min;
-  //         attribute long minLength;
+           attribute unsigned long minLength;
            attribute boolean multiple;
            attribute DOMString name;
            attribute DOMString pattern;
@@ -52,7 +52,7 @@ interface HTMLInputElement : HTMLElement {
   //void stepDown(optional long n = 1);
 
   //readonly attribute boolean willValidate;
-  //readonly attribute ValidityState validity;
+  readonly attribute ValidityState validity;
   //readonly attribute DOMString validationMessage;
   //boolean checkValidity();
   //boolean reportValidity();

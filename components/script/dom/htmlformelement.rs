@@ -10,6 +10,7 @@ use dom::bindings::codegen::Bindings::HTMLFormElementBinding;
 use dom::bindings::codegen::Bindings::HTMLFormElementBinding::HTMLFormElementMethods;
 use dom::bindings::codegen::Bindings::HTMLInputElementBinding::HTMLInputElementMethods;
 use dom::bindings::codegen::Bindings::HTMLTextAreaElementBinding::HTMLTextAreaElementMethods;
+use dom::bindings::codegen::Bindings::HTMLElementBinding::HTMLElementMethods;
 use dom::bindings::conversions::DerivedFrom;
 use dom::bindings::inheritance::{Castable, ElementTypeId, HTMLElementTypeId, NodeTypeId};
 use dom::bindings::js::{JS, MutNullableHeap, Root};
@@ -374,9 +375,11 @@ impl HTMLFormElement {
             if self.interactive_validation().is_err() {
                 // TODO: Implement event handlers on all form control elements
                 self.upcast::<EventTarget>().fire_simple_event("invalid");
+                println!("oh no something was wrong in our form");
                 return;
             }
         }
+        println!("woohoo something nothing was wrong in our form");
         // Step 5
         if submit_method_flag == SubmittedFrom::NotFromForm {
             let event = self.upcast::<EventTarget>()
@@ -492,6 +495,11 @@ impl HTMLFormElement {
         // TODO: Report the problems with the constraints of at least one of
         //       the elements given in unhandled invalid controls to the user
         // Step 4
+        _unhandled_invalid_controls.iter().next().map(|form_element| {
+            form_element.as_element().Focus();
+            //TODO display some sort of error popup
+        });
+
         Err(())
     }
 
@@ -504,8 +512,20 @@ impl HTMLFormElement {
         // Step 1-3
         let invalid_controls = node.traverse_preorder().filter_map(|field| {
             if let Some(_el) = field.downcast::<Element>() {
+                if let Some(validatable_element) = _el.as_maybe_validatable() {
+                    if !validatable_element.valid() {
+                        match field.type_id() {
+                            NodeTypeId::Element(ElementTypeId::HTMLElement(HTMLElementTypeId::HTMLInputElement)) => {
+                                return Some(FormSubmittableElement::InputElement(Root::from_ref(field.downcast::<HTMLInputElement>().unwrap())));
+                            },
+                            _ => {
+                                return None 
+                            }
+                        };
+                    }
+                }
+                        
                 None // Remove this line if you decide to refactor
-
                 // XXXKiChjang: Form control elements should each have a candidate_for_validation
                 //              and satisfies_constraints methods
 
@@ -521,6 +541,7 @@ impl HTMLFormElement {
                 .fire_event("invalid",
                             EventBubbles::DoesNotBubble,
                             EventCancelable::Cancelable);
+            //TODO is default prevention same as cancelled
             if !event.DefaultPrevented() { return Some(field); }
             None
         }).collect::<Vec<FormSubmittableElement>>();
@@ -736,6 +757,16 @@ pub enum FormSubmittableElement {
 }
 
 impl FormSubmittableElement {
+    fn as_element(&self) -> &HTMLElement {
+        match *self {
+            FormSubmittableElement::ButtonElement(ref button) => button.r().upcast(),
+            FormSubmittableElement::InputElement(ref input) => input.r().upcast(),
+            FormSubmittableElement::ObjectElement(ref object) => object.r().upcast(),
+            FormSubmittableElement::SelectElement(ref select) => select.r().upcast(),
+            FormSubmittableElement::TextAreaElement(ref textarea) => textarea.r().upcast()
+        }
+    }
+
     fn as_event_target(&self) -> &EventTarget {
         match *self {
             FormSubmittableElement::ButtonElement(ref button) => button.r().upcast(),

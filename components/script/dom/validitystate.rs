@@ -1,7 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 use dom::bindings::codegen::Bindings::ValidityStateBinding;
 use dom::bindings::codegen::Bindings::ValidityStateBinding::ValidityStateMethods;
 use dom::bindings::global::GlobalRef;
@@ -55,7 +54,10 @@ impl ValidityState {
 impl ValidityStateMethods for ValidityState {
     // https://html.spec.whatwg.org/multipage/#dom-validitystate-valuemissing
     fn ValueMissing(&self) -> bool {
-        false
+        match self.element.as_maybe_validatable() {
+            Some(validatable) => validatable.value_missing(),
+            None => false
+        }
     }
 
     // https://html.spec.whatwg.org/multipage/#dom-validitystate-typemismatch
@@ -70,7 +72,10 @@ impl ValidityStateMethods for ValidityState {
 
     // https://html.spec.whatwg.org/multipage/#dom-validitystate-toolong
     fn TooLong(&self) -> bool {
-        false
+        match self.element.as_maybe_validatable() {
+            Some(validatable) => validatable.value_too_long(),
+            None => false
+        }
     }
 
     // https://html.spec.whatwg.org/multipage/#dom-validitystate-tooshort

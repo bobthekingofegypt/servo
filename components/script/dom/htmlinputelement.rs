@@ -30,6 +30,7 @@ use dom::node::{Node, NodeDamage, UnbindContext};
 use dom::node::{document_from_node, window_from_node};
 use dom::nodelist::NodeList;
 use dom::validation::Validatable;
+use dom::validitystate::ValidityState;
 use dom::virtualmethods::VirtualMethods;
 use ipc_channel::ipc::{self, IpcSender};
 use net_traits::IpcSend;
@@ -80,6 +81,7 @@ pub struct HTMLInputElement {
     placeholder: DOMRefCell<DOMString>,
     value_changed: Cell<bool>,
     size: Cell<u32>,
+    minlength: Cell<u32>,
     maxlength: Cell<i32>,
     #[ignore_heap_size_of = "#7193"]
     textinput: DOMRefCell<TextInput<IpcSender<ConstellationMsg>>>,
@@ -118,6 +120,7 @@ impl InputActivationState {
 }
 
 static DEFAULT_INPUT_SIZE: u32 = 20;
+static DEFAULT_MIN_LENGTH: u32 = 0;
 static DEFAULT_MAX_LENGTH: i32 = -1;
 
 impl HTMLInputElement {
@@ -131,6 +134,7 @@ impl HTMLInputElement {
             placeholder: DOMRefCell::new(DOMString::new()),
             checked_changed: Cell::new(false),
             value_changed: Cell::new(false),
+            minlength: Cell::new(DEFAULT_MIN_LENGTH),
             maxlength: Cell::new(DEFAULT_MAX_LENGTH),
             size: Cell::new(DEFAULT_INPUT_SIZE),
             textinput: DOMRefCell::new(TextInput::new(Single, DOMString::new(), chan, None, SelectionDirection::None)),
@@ -271,6 +275,11 @@ impl LayoutHTMLInputElementHelpers for LayoutJS<HTMLInputElement> {
 }
 
 impl HTMLInputElementMethods for HTMLInputElement {
+    // https://html.spec.whatwg.org/multipage/#dom-cva-validity
+    fn Validity(&self) -> Root<ValidityState> {
+        let window = window_from_node(self);
+        ValidityState::new(window.r(), self.upcast())
+    }
     // https://html.spec.whatwg.org/multipage/#dom-input-accept
     make_getter!(Accept, "accept");
 
@@ -459,6 +468,12 @@ impl HTMLInputElementMethods for HTMLInputElement {
 
     // https://html.spec.whatwg.org/multipage/#dom-input-max
     make_setter!(SetMax, "max");
+
+    // https://html.spec.whatwg.org/multipage/#dom-input-maxlength
+    make_uint_getter!(MinLength, "minlength", DEFAULT_MIN_LENGTH);
+
+    // https://html.spec.whatwg.org/multipage/#dom-input-maxlength
+    make_uint_setter!(SetMinLength, "minlength", DEFAULT_MIN_LENGTH);
 
     // https://html.spec.whatwg.org/multipage/#dom-input-maxlength
     make_int_getter!(MaxLength, "maxlength", DEFAULT_MAX_LENGTH);
@@ -767,7 +782,7 @@ impl VirtualMethods for HTMLInputElement {
                     value.as_uint()
                 });
                 self.size.set(size.unwrap_or(DEFAULT_INPUT_SIZE));
-            }
+            },
             &atom!("type") => {
                 let el = self.upcast::<Element>();
                 match mutation {
@@ -867,7 +882,7 @@ impl VirtualMethods for HTMLInputElement {
                     },
                     _ => panic!("Expected an AttrValue::Int"),
                 }
-            }
+            },
             &atom!("placeholder") => {
                 {
                     let mut placeholder = self.placeholder.borrow_mut();
@@ -900,6 +915,8 @@ impl VirtualMethods for HTMLInputElement {
             &atom!("name") => AttrValue::from_atomic(value.into()),
             &atom!("size") => AttrValue::from_limited_u32(value.into(), DEFAULT_INPUT_SIZE),
             &atom!("type") => AttrValue::from_atomic(value.into()),
+            //TODO shouldn't be signed
+            &atom!("minlength") => AttrValue::from_limited_u32(value.into(), DEFAULT_MIN_LENGTH),
             &atom!("maxlength") => AttrValue::from_limited_i32(value.into(), DEFAULT_MAX_LENGTH),
             _ => self.super_type().unwrap().parse_plain_attribute(name, value),
         }
@@ -980,7 +997,21 @@ impl VirtualMethods for HTMLInputElement {
 
 impl FormControl for HTMLInputElement {}
 
-impl Validatable for HTMLInputElement {}
+impl Validatable for HTMLInputElement {
+
+    fn value_missing(&self) -> bool {
+        let element = self.upcast::<Element>();
+        println!("TESTING");
+        self.is_element_required(element) && self.Value().is_empty()
+    }
+
+    fn value_too_long(&self) -> bool {
+        let element = self.upcast::<Element>();
+        let minlength = self.minlength_value(element);
+        println!("Minlength : {:?}", minlength);
+        return false;
+    }
+}
 
 impl Activatable for HTMLInputElement {
     fn as_element(&self) -> &Element {
