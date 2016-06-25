@@ -54,7 +54,7 @@ interface HTMLInputElement : HTMLElement {
   //readonly attribute boolean willValidate;
   readonly attribute ValidityState validity;
   //readonly attribute DOMString validationMessage;
-  //boolean checkValidity();
+  boolean checkValidity();
   //boolean reportValidity();
   //void setCustomValidity(DOMString error);
 

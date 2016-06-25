@@ -230,6 +230,16 @@ impl HTMLFormElementMethods for HTMLFormElement {
     fn Length(&self) -> u32 {
         self.Elements().Length() as u32
     }
+
+    fn CheckValidity(&self) -> bool {
+         let _unhandled_invalid_controls = match self.static_validation() {
+            Ok(()) => return true,
+            Err(err) => {
+                println!("Error in form fields in CheckValdity");
+                return false
+            }
+        };
+    }
 }
 
 #[derive(Copy, Clone, HeapSizeOf, PartialEq)]

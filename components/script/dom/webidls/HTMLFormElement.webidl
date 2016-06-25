@@ -22,7 +22,7 @@ interface HTMLFormElement : HTMLElement {
 
   void submit();
   void reset();
-  //boolean checkValidity();
+  boolean checkValidity();
   //boolean reportValidity();
 
   //void requestAutocomplete();

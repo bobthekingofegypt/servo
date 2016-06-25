@@ -584,6 +584,24 @@ impl HTMLInputElementMethods for HTMLInputElement {
             EventCancelable::NotCancelable);
         self.upcast::<Node>().dirty(NodeDamage::OtherNodeDamage);
     }
+
+    fn CheckValidity(&self) -> bool {
+        let element = self.as_element();
+
+        if let Some(validatable_element) = element.as_maybe_validatable() {
+            if !validatable_element.valid() {
+                let event_target = self.upcast::<EventTarget>();
+                event_target.fire_event("invalid",
+                                EventBubbles::DoesNotBubble,
+                                EventCancelable::Cancelable);
+                return false;
+            } else {
+                return true;
+            }
+        } 
+
+        return false;
+    }
 }
 
 
@@ -1006,7 +1024,7 @@ impl Validatable for HTMLInputElement {
     }
 
     fn value_too_short(&self) -> bool {
-        let element = self.upcast::<Element>();
+        let element = self.as_element(); //upcast::<Element>();
         if let Some(length) = minlength_value(element) {
             if (self.Value().chars().count() as u32) < length {
                 println!("value was too short : {:?} {:?}", self.Value().chars().count(), length);
@@ -1019,8 +1037,13 @@ impl Validatable for HTMLInputElement {
 
     fn value_too_long(&self) -> bool {
         let element = self.upcast::<Element>();
-        let maxlength = maxlength_value(element);
-        println!("Maxlength : {:?}", maxlength);
+        if let Some(length) = maxlength_value(element) {
+            if (self.Value().chars().count() as i32) >= length {
+                println!("value was too long : {:?} {:?}", self.Value().chars().count(), length);
+                return true;
+            }
+        }
+        println!("value not too long");
         return false;
     }
 }
