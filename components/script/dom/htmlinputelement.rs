@@ -29,7 +29,7 @@ use dom::keyboardevent::KeyboardEvent;
 use dom::node::{Node, NodeDamage, UnbindContext};
 use dom::node::{document_from_node, window_from_node};
 use dom::nodelist::NodeList;
-use dom::validation::Validatable;
+use dom::validation::{Validatable, minlength_value, maxlength_value};
 use dom::validitystate::ValidityState;
 use dom::virtualmethods::VirtualMethods;
 use ipc_channel::ipc::{self, IpcSender};
@@ -1005,10 +1005,22 @@ impl Validatable for HTMLInputElement {
         self.is_element_required(element) && self.Value().is_empty()
     }
 
+    fn value_too_short(&self) -> bool {
+        let element = self.upcast::<Element>();
+        if let Some(length) = minlength_value(element) {
+            if (self.Value().chars().count() as u32) < length {
+                println!("value was too short : {:?} {:?}", self.Value().chars().count(), length);
+                return true;
+            }
+        }
+        println!("value not too short");
+        return false;
+    }
+
     fn value_too_long(&self) -> bool {
         let element = self.upcast::<Element>();
-        let minlength = self.minlength_value(element);
-        println!("Minlength : {:?}", minlength);
+        let maxlength = maxlength_value(element);
+        println!("Maxlength : {:?}", maxlength);
         return false;
     }
 }

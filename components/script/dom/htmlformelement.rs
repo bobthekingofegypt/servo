@@ -514,6 +514,7 @@ impl HTMLFormElement {
             if let Some(_el) = field.downcast::<Element>() {
                 if let Some(validatable_element) = _el.as_maybe_validatable() {
                     if !validatable_element.valid() {
+                        println!("something wasn't valid");
                         match field.type_id() {
                             NodeTypeId::Element(ElementTypeId::HTMLElement(HTMLElementTypeId::HTMLInputElement)) => {
                                 return Some(FormSubmittableElement::InputElement(Root::from_ref(field.downcast::<HTMLInputElement>().unwrap())));

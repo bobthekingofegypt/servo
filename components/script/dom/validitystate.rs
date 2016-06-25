@@ -80,7 +80,10 @@ impl ValidityStateMethods for ValidityState {
 
     // https://html.spec.whatwg.org/multipage/#dom-validitystate-tooshort
     fn TooShort(&self) -> bool {
-        false
+        match self.element.as_maybe_validatable() {
+            Some(validatable) => validatable.value_too_short(),
+            None => false
+        }
     }
 
     // https://html.spec.whatwg.org/multipage/#dom-validitystate-rangeunderflow

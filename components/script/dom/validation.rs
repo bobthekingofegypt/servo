@@ -13,16 +13,11 @@ pub trait Validatable {
         element.get_attribute_by_name(attribute_name).map(|s| s.Value()).is_some()
     }
 
-    fn minlength_value(&self, element: &Element) -> Option<u32> {
-        let attribute_name = Atom::from("minlength");
-        if !element.has_attribute(&attribute_name) {
-            return None;
-        }
-        
-        return Some(element.get_uint_attribute(&attribute_name, 0));
+    fn value_missing(&self) -> bool {
+        return false;
     }
 
-    fn value_missing(&self) -> bool {
+    fn value_too_short(&self) -> bool {
         return false;
     }
 
@@ -31,7 +26,26 @@ pub trait Validatable {
     }
 
     fn valid(&self) -> bool {
-        return !self.value_missing() ||
-            self.value_too_long();
+        return !self.value_missing() && 
+            !self.value_too_short() && 
+            !self.value_too_long();
     }
+}
+
+pub fn minlength_value(element: &Element) -> Option<u32> {
+    let attribute_name = Atom::from("minlength");
+    if !element.has_attribute(&attribute_name) {
+        return None;
+    }
+    
+    return Some(element.get_uint_attribute(&attribute_name, 0));
+}
+
+pub fn maxlength_value(element: &Element) -> Option<u32> {
+    let attribute_name = Atom::from("maxlength");
+    if !element.has_attribute(&attribute_name) {
+        return None;
+    }
+    
+    return Some(element.get_uint_attribute(&attribute_name, 0));
 }
