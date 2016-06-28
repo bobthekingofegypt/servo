@@ -29,7 +29,7 @@ use dom::keyboardevent::KeyboardEvent;
 use dom::node::{Node, NodeDamage, UnbindContext};
 use dom::node::{document_from_node, window_from_node};
 use dom::nodelist::NodeList;
-use dom::validation::{Validatable, minlength_value, maxlength_value};
+use dom::validation::{Validatable, minlength_value, maxlength_value, pattern_value};
 use dom::validitystate::ValidityState;
 use dom::virtualmethods::VirtualMethods;
 use ipc_channel::ipc::{self, IpcSender};
@@ -45,6 +45,7 @@ use style::element_state::*;
 use textinput::KeyReaction::{DispatchInput, Nothing, RedrawSelection, TriggerDefaultAction};
 use textinput::Lines::Single;
 use textinput::{TextInput, SelectionDirection};
+use regex::Regex;
 
 const DEFAULT_SUBMIT_VALUE: &'static str = "Submit";
 const DEFAULT_RESET_VALUE: &'static str = "Reset";
@@ -1045,6 +1046,16 @@ impl Validatable for HTMLInputElement {
         }
         println!("value not too long");
         return false;
+    }
+
+    fn value_pattern_mismatch(&self) -> bool {
+        let element = self.upcast::<Element>();
+        if let Some(pattern) = pattern_value(element) {
+            let re = Regex::new(&pattern).unwrap();
+            return !re.is_match(&self.Value());
+        }
+
+        false
     }
 }
 

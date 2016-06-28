@@ -23,9 +23,14 @@ pub trait Validatable {
     fn value_too_long(&self) -> bool {
         return false;
     }
+    
+    fn value_pattern_mismatch(&self) -> bool {
+        return false;
+    }
 
     fn valid(&self) -> bool {
         return !self.value_missing() && 
+            !self.value_pattern_mismatch() &&
             !self.value_too_short() && 
             !self.value_too_long();
     }
@@ -48,4 +53,13 @@ pub fn maxlength_value(element: &Element) -> Option<i32> {
     
     println!("element value - {:?}", element.GetAttribute(DOMString::from("maxlength")));
     return Some(element.get_int_attribute(&attribute_name, 0));
+}
+
+pub fn pattern_value(element: &Element) -> Option<DOMString> {
+    let attribute_name = atom!("pattern");
+    if !element.has_attribute(&attribute_name) {
+        return None;
+    }
+    
+    return Some(element.get_string_attribute(&attribute_name));
 }

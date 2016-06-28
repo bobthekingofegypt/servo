@@ -67,7 +67,10 @@ impl ValidityStateMethods for ValidityState {
 
     // https://html.spec.whatwg.org/multipage/#dom-validitystate-patternmismatch
     fn PatternMismatch(&self) -> bool {
-        false
+        match self.element.as_maybe_validatable() {
+            Some(validatable) => validatable.value_pattern_mismatch(),
+            None => false
+        }
     }
 
     // https://html.spec.whatwg.org/multipage/#dom-validitystate-toolong
