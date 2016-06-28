@@ -62,7 +62,10 @@ impl ValidityStateMethods for ValidityState {
 
     // https://html.spec.whatwg.org/multipage/#dom-validitystate-typemismatch
     fn TypeMismatch(&self) -> bool {
-        false
+        match self.element.as_maybe_validatable() {
+            Some(validatable) => validatable.value_type_mismatch(),
+            None => false
+        }
     }
 
     // https://html.spec.whatwg.org/multipage/#dom-validitystate-patternmismatch

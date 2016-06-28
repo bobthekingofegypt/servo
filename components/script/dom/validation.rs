@@ -28,9 +28,14 @@ pub trait Validatable {
         return false;
     }
 
+    fn value_type_mismatch(&self) -> bool {
+        return false;
+    }
+
     fn valid(&self) -> bool {
         return !self.value_missing() && 
             !self.value_pattern_mismatch() &&
+            !self.value_type_mismatch() &&
             !self.value_too_short() && 
             !self.value_too_long();
     }

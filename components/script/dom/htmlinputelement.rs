@@ -1057,6 +1057,23 @@ impl Validatable for HTMLInputElement {
 
         false
     }
+
+    fn value_type_mismatch(&self) -> bool {
+        let element = self.upcast::<Element>();
+        let ty = self.type_();
+
+        println!("ty {:?}", ty);
+
+        match ty {
+            atom!("email") => {
+                println!("email type check");
+                return false;
+            },
+            _ => return false
+        }
+
+        false
+    }
 }
 
 impl Activatable for HTMLInputElement {
