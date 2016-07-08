@@ -39,6 +39,10 @@ pub trait Validatable {
             !self.value_too_short() && 
             !self.value_too_long();
     }
+
+    fn candidate_for_validation(&self) -> bool {
+        return false;
+    }
 }
 
 pub fn minlength_value(element: &Element) -> Option<u32> {

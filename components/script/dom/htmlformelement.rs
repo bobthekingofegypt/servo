@@ -946,7 +946,6 @@ pub trait FormControl: DerivedFrom<Element> + Reflectable {
     }
 
     // XXXKiChjang: Implement these on inheritors
-    // fn candidate_for_validation(&self) -> bool;
     // fn satisfies_constraints(&self) -> bool;
 }
 

@@ -1014,17 +1014,34 @@ impl VirtualMethods for HTMLInputElement {
     }
 }
 
-impl FormControl for HTMLInputElement {}
+impl FormControl for HTMLInputElement {
+}
 
 impl Validatable for HTMLInputElement {
+    fn candidate_for_validation(&self) -> bool {
+        let ty = self.type_();
+
+        if ty == atom!("hidden") || ty == atom!("button") || ty == atom!("reset") {
+            return false;
+        }
+
+        self.is_mutable()
+    }
 
     fn value_missing(&self) -> bool {
+        if !self.candidate_for_validation() {
+            return false;
+        }
+
         let element = self.upcast::<Element>();
-        println!("TESTING");
         self.is_element_required(element) && self.Value().is_empty()
     }
 
     fn value_too_short(&self) -> bool {
+        if !self.candidate_for_validation() {
+            return false;
+        }
+
         let element = self.as_element(); //upcast::<Element>();
         if let Some(length) = minlength_value(element) {
             if (self.Value().chars().count() as u32) < length {
@@ -1037,6 +1054,10 @@ impl Validatable for HTMLInputElement {
     }
 
     fn value_too_long(&self) -> bool {
+        if !self.candidate_for_validation() {
+            return false;
+        }
+
         let element = self.upcast::<Element>();
         if let Some(length) = maxlength_value(element) {
             if (self.Value().chars().count() as i32) >= length {
@@ -1049,6 +1070,10 @@ impl Validatable for HTMLInputElement {
     }
 
     fn value_pattern_mismatch(&self) -> bool {
+        if !self.candidate_for_validation() {
+            return false;
+        }
+
         let element = self.upcast::<Element>();
         if let Some(pattern) = pattern_value(element) {
             let re = Regex::new(&pattern).unwrap();
@@ -1059,6 +1084,10 @@ impl Validatable for HTMLInputElement {
     }
 
     fn value_type_mismatch(&self) -> bool {
+        if !self.candidate_for_validation() {
+            return false;
+        }
+
         let element = self.upcast::<Element>();
         let ty = self.type_();
 
@@ -1066,13 +1095,17 @@ impl Validatable for HTMLInputElement {
 
         match ty {
             atom!("email") => {
-                println!("email type check");
-                return false;
+                //TODO replace this with non-regexp solution, just testing for now
+                let re = Regex::new(r"^\S+@\S+$").unwrap();
+                return !re.is_match(&self.Value());
+            },
+            atom!("url") => {
+                //TODO replace this with non-regexp solution, just testing for now
+                let re = Regex::new(r"^(http:\/\/)?[a-zA-Z0-9_\-]+\.[a-zA-Z0-9_\-]+\.[a-zA-Z0-9_\-]+$").unwrap();
+                return !re.is_match(&self.Value());
             },
             _ => return false
         }
-
-        false
     }
 }
 
