@@ -54,6 +54,7 @@ impl ValidityState {
 impl ValidityStateMethods for ValidityState {
     // https://html.spec.whatwg.org/multipage/#dom-validitystate-valuemissing
     fn ValueMissing(&self) -> bool {
+        //TODO use static type to store a validatable only
         match self.element.as_maybe_validatable() {
             Some(validatable) => validatable.value_missing(),
             None => false

@@ -1033,7 +1033,7 @@ impl Validatable for HTMLInputElement {
             return false;
         }
 
-        let element = self.upcast::<Element>();
+        let element = self.as_element();
         self.is_element_required(element) && self.Value().is_empty()
     }
 
@@ -1042,14 +1042,12 @@ impl Validatable for HTMLInputElement {
             return false;
         }
 
-        let element = self.as_element(); //upcast::<Element>();
+        let element = self.as_element();
         if let Some(length) = minlength_value(element) {
             if (self.Value().chars().count() as u32) < length {
-                println!("value was too short : {:?} {:?}", self.Value().chars().count(), length);
                 return true;
             }
         }
-        println!("value not too short");
         return false;
     }
 
@@ -1058,10 +1056,9 @@ impl Validatable for HTMLInputElement {
             return false;
         }
 
-        let element = self.upcast::<Element>();
+        let element = self.as_element();
         if let Some(length) = maxlength_value(element) {
             if (self.Value().chars().count() as i32) >= length {
-                println!("value was too long : {:?} {:?}", self.Value().chars().count(), length);
                 return true;
             }
         }
@@ -1074,7 +1071,7 @@ impl Validatable for HTMLInputElement {
             return false;
         }
 
-        let element = self.upcast::<Element>();
+        let element = self.as_element();
         if let Some(pattern) = pattern_value(element) {
             let re = Regex::new(&pattern).unwrap();
             return !re.is_match(&self.Value());
@@ -1088,7 +1085,7 @@ impl Validatable for HTMLInputElement {
             return false;
         }
 
-        let element = self.upcast::<Element>();
+        let element = self.as_element();
         let ty = self.type_();
 
         println!("ty {:?}", ty);
@@ -1101,7 +1098,7 @@ impl Validatable for HTMLInputElement {
             },
             atom!("url") => {
                 //TODO replace this with non-regexp solution, just testing for now
-                let re = Regex::new(r"^(http:\/\/)?[a-zA-Z0-9_\-]+\.[a-zA-Z0-9_\-]+\.[a-zA-Z0-9_\-]+$").unwrap();
+                let re = Regex::new(r"^(http://)?[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+$").unwrap();
                 return !re.is_match(&self.Value());
             },
             _ => return false
