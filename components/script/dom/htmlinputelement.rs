@@ -278,6 +278,7 @@ impl LayoutHTMLInputElementHelpers for LayoutJS<HTMLInputElement> {
 impl HTMLInputElementMethods for HTMLInputElement {
     // https://html.spec.whatwg.org/multipage/#dom-cva-validity
     fn Validity(&self) -> Root<ValidityState> {
+        //TODO move this to top level variable
         let window = window_from_node(self);
         ValidityState::new(window.r(), self.upcast())
     }
@@ -602,6 +603,36 @@ impl HTMLInputElementMethods for HTMLInputElement {
         } 
 
         return false;
+    }
+
+    fn ValidationMessage(&self) -> DOMString {
+        let element = self.as_element();
+
+        if let Some(validatable_element) = element.as_maybe_validatable() {
+            let value = self.Value();
+
+            if validatable_element.value_missing() {
+                return DOMString::from("Value is required");
+            }
+
+            if validatable_element.value_type_mismatch() {
+                return DOMString::from("value type mismatch");
+            }
+
+            if validatable_element.value_pattern_mismatch() {
+                return DOMString::from("value pattern mismatch");
+            }
+
+            if validatable_element.value_too_long() {
+                return DOMString::from("value is too long");
+            }
+
+            if validatable_element.value_too_short() {
+                return DOMString::from("value is too short");
+            }
+        }
+
+        return DOMString::from("");
     }
 }
 
@@ -1029,12 +1060,16 @@ impl Validatable for HTMLInputElement {
     }
 
     fn value_missing(&self) -> bool {
-        if !self.candidate_for_validation() {
+        let element = self.as_element();
+        if !self.candidate_for_validation() || !self.is_element_required(element) {
             return false;
         }
 
-        let element = self.as_element();
-        self.is_element_required(element) && self.Value().is_empty()
+        match self.input_type.get() {
+            InputType::InputCheckbox | 
+            InputType::InputRadio => !self.Checked(),
+            _ => self.Value().is_empty(),
+        }
     }
 
     fn value_too_short(&self) -> bool {
@@ -1081,7 +1116,8 @@ impl Validatable for HTMLInputElement {
     }
 
     fn value_type_mismatch(&self) -> bool {
-        if !self.candidate_for_validation() {
+        //TODO check what types we should check before running this function
+        if !self.candidate_for_validation() || self.Value().is_empty() {
             return false;
         }
 
