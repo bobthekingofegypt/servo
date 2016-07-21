@@ -587,6 +587,10 @@ impl HTMLInputElementMethods for HTMLInputElement {
         self.upcast::<Node>().dirty(NodeDamage::OtherNodeDamage);
     }
 
+    fn WillValidate(&self) -> bool {
+        self.candidate_for_validation()
+    }
+
     fn CheckValidity(&self) -> bool {
         let element = self.as_element();
 
