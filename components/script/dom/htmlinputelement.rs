@@ -1105,6 +1105,27 @@ impl Validatable for HTMLInputElement {
         return false;
     }
 
+    fn value_too_long(&self) -> bool {
+        if !self.candidate_for_validation() {
+            return false;
+        }
+
+        let ty = self.type_();
+
+        if !(ty == atom!("number")) {
+            return false;
+        }
+
+        let element = self.as_element();
+        if let Some(length) = maxlength_value(element) {
+            if (self.Value().chars().count() as i32) >= length {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     fn value_pattern_mismatch(&self) -> bool {
         if !self.candidate_for_validation() {
             return false;

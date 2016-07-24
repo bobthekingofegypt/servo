@@ -95,12 +95,18 @@ impl ValidityStateMethods for ValidityState {
 
     // https://html.spec.whatwg.org/multipage/#dom-validitystate-rangeunderflow
     fn RangeUnderflow(&self) -> bool {
-        false
+        match self.element.as_maybe_validatable() {
+            Some(validatable) => validatable.value_range_underflow(),
+            None => false
+        }
     }
 
     // https://html.spec.whatwg.org/multipage/#dom-validitystate-rangeoverflow
     fn RangeOverflow(&self) -> bool {
-        false
+        match self.element.as_maybe_validatable() {
+            Some(validatable) => validatable.value_range_overflow(),
+            None => false
+        }
     }
 
     // https://html.spec.whatwg.org/multipage/#dom-validitystate-stepmismatch

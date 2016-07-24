@@ -5,6 +5,7 @@ use dom::bindings::str::DOMString;
 use dom::element::Element;
 use dom::bindings::codegen::Bindings::AttrBinding::AttrMethods;
 use dom::bindings::codegen::Bindings::ElementBinding::ElementMethods;
+use style::attr::parse_double;
 
 pub trait Validatable {
     fn is_element_required(&self, element: &Element) -> bool {
@@ -32,12 +33,22 @@ pub trait Validatable {
         return false;
     }
 
+    fn value_range_overflow(&self) -> bool {
+        return false;
+    }
+
+    fn value_range_underflow(&self) -> bool {
+        return false;
+    }
+
     fn valid(&self) -> bool {
         return !self.value_missing() && 
             !self.value_pattern_mismatch() &&
             !self.value_type_mismatch() &&
             !self.value_too_short() && 
-            !self.value_too_long();
+            !self.value_too_long() && 
+            !self.value_range_overflow() && 
+            !self.value_range_underflow();
     }
 
     fn candidate_for_validation(&self) -> bool {
@@ -62,6 +73,22 @@ pub fn maxlength_value(element: &Element) -> Option<i32> {
     
     println!("element value - {:?}", element.GetAttribute(DOMString::from("maxlength")));
     return Some(element.get_int_attribute(&attribute_name, 0));
+}
+
+pub fn max_value(element: &Element) -> Option<f64> {
+    let attribute_name = atom!("max");
+    if !element.has_attribute(&attribute_name) {
+        return None;
+    }
+    
+    println!("element value - {:?}", element.GetAttribute(DOMString::from("maxlength")));
+    let attribute_value : String = String::from(element.get_string_attribute(&attribute_name));
+    let value = parse_double(&attribute_value);
+    
+    match value {
+        Ok(v) => Some(v),
+        Err(e) => None
+    }
 }
 
 pub fn pattern_value(element: &Element) -> Option<DOMString> {
